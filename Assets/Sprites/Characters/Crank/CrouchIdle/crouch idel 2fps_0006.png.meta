@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 5a510b3cb2ff97d479ed0a7b978bb517
+guid: 0a012064aa136634282a4427c7437063
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 7648689942202029600
-    second: dash new_0007_0
+      213: 183283280241983478
+    second: crouch idel 2fps_0006_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -100,13 +100,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: dash new_0007_0
+      name: crouch idel 2fps_0006_0
       rect:
         serializedVersion: 2
-        x: 19
+        x: 23
         y: 0
-        width: 61
-        height: 71
+        width: 45
+        height: 47
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -115,8 +115,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 0261e0a5afa952a60800000000000000
-      internalID: 7648689942202029600
+      spriteID: 6ff771c1c272b8200800000000000000
+      internalID: 183283280241983478
       vertices: []
       indices: 
       edges: []
@@ -135,7 +135,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      dash new_0007_0: 7648689942202029600
+      crouch idel 2fps_0006_0: 183283280241983478
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
