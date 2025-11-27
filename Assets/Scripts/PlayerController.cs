@@ -47,7 +47,20 @@ public class PlayerController : MonoBehaviour
     [Header("Physics")]
     [SerializeField] private float gravity = 30f;
     [SerializeField] private float maxFallSpeed = 20f;
-    
+
+    [Header("Melee Attack")]
+    [SerializeField] private bool enableMeleeAttack = true;
+    [SerializeField] private float attackCooldown = 0.4f;
+    [SerializeField] private float attackRange = 1f;
+    [SerializeField] private float attackRadius = 0.4f;
+    [SerializeField] private int attackDamage = 1;
+    [SerializeField] private LayerMask attackHitLayer;
+    [SerializeField] private bool attackPressed;
+    [SerializeField] private float attackCooldownTimer;
+    [SerializeField] private Vector2 attackDirection;
+
+
+
     // Components
     private Rigidbody2D rb;
     private Collider2D col;
@@ -107,7 +120,9 @@ public class PlayerController : MonoBehaviour
         CheckGrounded();
         CheckWall();
         UpdateTimers();
-        
+
+        HandleMeleeRequest();
+
         // Handle state transitions
         if (isGrounded && !wasGrounded)
         {
@@ -150,7 +165,54 @@ public class PlayerController : MonoBehaviour
             }
         }
     }
-    
+
+    private void HandleMeleeRequest()
+    {
+        if (!enableMeleeAttack)
+        {
+            attackPressed = false;
+            return;
+        }
+
+        if (attackCooldownTimer > 0f)
+            return;
+
+        if (attackPressed)
+        {
+            PerformMeleeAttack();
+            attackPressed = false;
+        }
+    }
+
+    private void PerformMeleeAttack()
+    {
+        // attack direction
+        float faceDir = transform.localScale.x >= 0 ? 1f : -1f;
+        attackDirection = new Vector2(faceDir, 0f);
+
+        // attack origin
+        Vector2 origin = (Vector2)transform.position + attackDirection * attackRange;
+
+        // target detection
+        Collider2D[] hits = Physics2D.OverlapCircleAll(origin, attackRadius, attackHitLayer);
+
+        foreach (var hit in hits)
+        {
+            // Optional: requires a damageable interface or component
+            var damageable = hit.GetComponent<IDamageable>();
+            if (damageable != null)
+            {
+                damageable.TakeDamage(attackDamage);
+            }
+        }
+
+        // cooldown
+        attackCooldownTimer = attackCooldown;
+
+    }
+
+
+
     public void OnMove(InputValue value)
     {
         moveInput = value.Get<Vector2>();
@@ -176,7 +238,14 @@ public class PlayerController : MonoBehaviour
             dashPressed = true;
         }
     }
-    
+
+    public void OnAttack(InputValue value)
+    {
+        if (value.isPressed)
+            attackPressed = true;
+    }
+
+
     private void HandleMovement()
     {
         if (!canMove && wallJumpControlTimer > 0f)
@@ -404,32 +473,29 @@ public class PlayerController : MonoBehaviour
             wallDirection = 1;
         }
     }
-    
+
     private void UpdateTimers()
     {
         // Dash cooldown
         if (dashCooldownTimer > 0f)
-        {
             dashCooldownTimer -= Time.deltaTime;
-        }
-        
+
         // Wall stick
         if (wallStickTimer > 0f && !isWallSliding)
-        {
             wallStickTimer -= Time.deltaTime;
-        }
-        
+
         // Wall jump control delay
         if (wallJumpControlTimer > 0f)
         {
             wallJumpControlTimer -= Time.deltaTime;
-            
             if (wallJumpControlTimer <= 0f)
-            {
                 canMove = true;
-            }
         }
-        
+
+        // Attack cooldown
+        if (attackCooldownTimer > 0f)
+            attackCooldownTimer -= Time.deltaTime;
+
         // Trigger dash when requested
         if (dashPressed)
         {
@@ -437,7 +503,8 @@ public class PlayerController : MonoBehaviour
             dashPressed = false;
         }
     }
-    
+
+
     private void OnLanded()
     {
         // Reset air dashes
@@ -471,8 +538,19 @@ public class PlayerController : MonoBehaviour
         {
             Gizmos.DrawLine(transform.position, transform.position + (Vector3)rb.linearVelocity * 0.1f);
         }
+
+        // Draw melee attack area
+        if (enableMeleeAttack)
+        {
+            Gizmos.color = Color.white;
+            float faceDir = transform.localScale.x >= 0 ? 1f : -1f;
+            Vector2 origin = (Vector2)transform.position + new Vector2(faceDir * attackRange, 0f);
+            Gizmos.DrawWireSphere(origin, attackRadius);
+        }
+
+
     }
-    
+
     // Public methods for external systems
     public bool IsGrounded() => isGrounded;
     public bool IsWallSliding() => isWallSliding;
