@@ -9696,6 +9696,17 @@ MonoBehaviour:
   wallCheckOffset: {x: 0.52, y: 0}
   gravity: 30
   maxFallSpeed: 20
+  enableMeleeAttack: 1
+  attackCooldown: 0.4
+  attackRange: 1
+  attackRadius: 0.4
+  attackDamage: 1
+  attackHitLayer:
+    serializedVersion: 2
+    m_Bits: 0
+  attackPressed: 0
+  attackCooldownTimer: 0
+  attackDirection: {x: 0, y: 0}
 --- !u!114 &1957833945
 MonoBehaviour:
   m_ObjectHideFlags: 0
