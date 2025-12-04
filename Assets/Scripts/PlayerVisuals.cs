@@ -25,6 +25,9 @@ public class PlayerVisuals : MonoBehaviour
     [SerializeField] private float jumpSquashAmount = 0.8f;
     [SerializeField] private float landSquashAmount = 0.6f;
     [SerializeField] private float squashDuration = 0.1f;
+
+    [Header("Damage Feedback")]
+    [SerializeField] private float invincibilityFlashRate = 0.1f;
     
     private PlayerController playerController;
     private Vector3 originalScale;
@@ -32,6 +35,7 @@ public class PlayerVisuals : MonoBehaviour
     private bool wasDashing;
     private float squashTimer;
     private Vector3 targetScale;
+    private float flashTimer;
     
     private void Awake()
     {
@@ -58,6 +62,8 @@ public class PlayerVisuals : MonoBehaviour
         HandleParticles();
         HandleSquashStretch();
         HandleDashTrail();
+        HandleWhipAnimation();
+        HandleInvincibilityFlash();
     }
     
     private void HandleSpriteFlip()
@@ -151,6 +157,35 @@ public class PlayerVisuals : MonoBehaviour
         else
         {
             dashTrail.emitting = false;
+        }
+    }
+    
+    private void HandleWhipAnimation()
+    {
+        if (animator == null)
+            return;
+
+        if (playerController.ConsumeAttackJustPerformed())
+        {
+            animator.SetTrigger("Whip");
+        }
+    }
+
+    private void HandleInvincibilityFlash()
+    {
+        if (spriteRenderer == null)
+            return;
+
+        if (playerController.IsInvincible())
+        {
+            flashTimer += Time.deltaTime;
+            bool visible = Mathf.FloorToInt(flashTimer / invincibilityFlashRate) % 2 == 0;
+            spriteRenderer.enabled = visible;
+        }
+        else
+        {
+            flashTimer = 0f;
+            spriteRenderer.enabled = true;
         }
     }
     

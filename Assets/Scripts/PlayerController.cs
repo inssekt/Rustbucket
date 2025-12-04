@@ -3,7 +3,7 @@ using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(Rigidbody2D))]
 [RequireComponent(typeof(Collider2D))]
-public class PlayerController : MonoBehaviour
+public class PlayerController : MonoBehaviour, IDamageable
 {
     [Header("Movement")]
     [SerializeField] private float moveSpeed = 8f;
@@ -47,7 +47,36 @@ public class PlayerController : MonoBehaviour
     [Header("Physics")]
     [SerializeField] private float gravity = 30f;
     [SerializeField] private float maxFallSpeed = 20f;
-    
+
+    [Header("Player Health")]
+    [SerializeField] private int maxHealth = 5;
+    [SerializeField] private int currentHealth;
+    [SerializeField] private float invincibilityDuration = 1f;
+    [SerializeField] private float knockbackForce = 8f;
+    [SerializeField] private float knockbackStunDuration = 0.2f;
+
+    [Header("Melee Attack")]
+    [SerializeField] private bool enableMeleeAttack = true;
+    [SerializeField] private float attackCooldown = 0.4f;
+    [SerializeField] private float attackRange = 1f;
+    [SerializeField] private float attackRadius = 0.4f;
+    [SerializeField] private int attackDamage = 1;
+    [SerializeField] private LayerMask attackHitLayer;
+    [SerializeField] private bool attackPressed;
+    [SerializeField] private float attackCooldownTimer;
+    [SerializeField] private Vector2 attackDirection;
+
+
+
+    private bool attackJustPerformed;
+
+    // Health state
+    private bool isInvincible;
+    private float invincibilityTimer;
+    private float knockbackStunTimer;
+
+
+
     // Components
     private Rigidbody2D rb;
     private Collider2D col;
@@ -89,6 +118,7 @@ public class PlayerController : MonoBehaviour
     // Movement
     private Vector2 velocity;
     private bool canMove = true;
+    private float lastFacingDirection = 1f;
     
     private void Awake()
     {
@@ -99,6 +129,8 @@ public class PlayerController : MonoBehaviour
         // Setup Rigidbody for manual physics control
         rb.gravityScale = 0f; // I handle gravity manually
         rb.freezeRotation = true;
+
+        currentHealth = maxHealth;
     }
     
     private void Update()
@@ -107,7 +139,10 @@ public class PlayerController : MonoBehaviour
         CheckGrounded();
         CheckWall();
         UpdateTimers();
-        
+        UpdateInvincibility();
+
+        HandleMeleeRequest();
+
         // Handle state transitions
         if (isGrounded && !wasGrounded)
         {
@@ -150,7 +185,56 @@ public class PlayerController : MonoBehaviour
             }
         }
     }
-    
+
+    private void HandleMeleeRequest()
+    {
+        if (!enableMeleeAttack)
+        {
+            attackPressed = false;
+            return;
+        }
+
+        if (attackCooldownTimer > 0f)
+            return;
+
+        if (attackPressed)
+        {
+            PerformMeleeAttack();
+            attackPressed = false;
+        }
+    }
+
+    private void PerformMeleeAttack()
+    {
+        // attack direction based on last horizontal input
+        float faceDir = lastFacingDirection;
+        attackDirection = new Vector2(faceDir, 0f);
+
+        // attack origin
+        Vector2 origin = (Vector2)transform.position + attackDirection * attackRange;
+
+        // target detection
+        Collider2D[] hits = Physics2D.OverlapCircleAll(origin, attackRadius, attackHitLayer);
+
+        foreach (var hit in hits)
+        {
+            // Optional: requires a damageable interface or component
+            var damageable = hit.GetComponent<IDamageable>();
+            if (damageable != null)
+            {
+                damageable.TakeDamage(attackDamage);
+            }
+        }
+
+        // cooldown
+        attackCooldownTimer = attackCooldown;
+
+        attackJustPerformed = true;
+
+    }
+
+
+
     public void OnMove(InputValue value)
     {
         moveInput = value.Get<Vector2>();
@@ -176,9 +260,20 @@ public class PlayerController : MonoBehaviour
             dashPressed = true;
         }
     }
-    
+
+    public void OnAttack(InputValue value)
+    {
+        if (value.isPressed)
+            attackPressed = true;
+    }
+
+
     private void HandleMovement()
     {
+        // Skip movement during knockback stun
+        if (knockbackStunTimer > 0f)
+            return;
+
         if (!canMove && wallJumpControlTimer > 0f)
             return;
         
@@ -189,6 +284,7 @@ public class PlayerController : MonoBehaviour
         if (Mathf.Abs(targetSpeed) > 0.01f)
         {
             velocity.x = Mathf.MoveTowards(velocity.x, targetSpeed, accel * Time.fixedDeltaTime);
+            lastFacingDirection = Mathf.Sign(horizontalInput);
         }
         else
         {
@@ -404,32 +500,37 @@ public class PlayerController : MonoBehaviour
             wallDirection = 1;
         }
     }
-    
+
     private void UpdateTimers()
     {
         // Dash cooldown
         if (dashCooldownTimer > 0f)
-        {
             dashCooldownTimer -= Time.deltaTime;
-        }
-        
+
         // Wall stick
         if (wallStickTimer > 0f && !isWallSliding)
-        {
             wallStickTimer -= Time.deltaTime;
-        }
-        
+
         // Wall jump control delay
         if (wallJumpControlTimer > 0f)
         {
             wallJumpControlTimer -= Time.deltaTime;
-            
             if (wallJumpControlTimer <= 0f)
-            {
                 canMove = true;
-            }
         }
-        
+
+        // Attack cooldown
+        if (attackCooldownTimer > 0f)
+            attackCooldownTimer -= Time.deltaTime;
+
+        // Invincibility
+        if (invincibilityTimer > 0f)
+            invincibilityTimer -= Time.deltaTime;
+
+        // Knockback stun
+        if (knockbackStunTimer > 0f)
+            knockbackStunTimer -= Time.deltaTime;
+
         // Trigger dash when requested
         if (dashPressed)
         {
@@ -437,7 +538,8 @@ public class PlayerController : MonoBehaviour
             dashPressed = false;
         }
     }
-    
+
+
     private void OnLanded()
     {
         // Reset air dashes
@@ -471,12 +573,108 @@ public class PlayerController : MonoBehaviour
         {
             Gizmos.DrawLine(transform.position, transform.position + (Vector3)rb.linearVelocity * 0.1f);
         }
+
+        // Draw melee attack area
+        if (enableMeleeAttack)
+        {
+            Gizmos.color = Color.white;
+            float faceDir = Application.isPlaying ? lastFacingDirection : 1f;
+            Vector2 origin = (Vector2)transform.position + new Vector2(faceDir * attackRange, 0f);
+            Gizmos.DrawWireSphere(origin, attackRadius);
+        }
+
+
     }
-    
+
+    // IDamageable implementation
+    public void TakeDamage(int amount)
+    {
+        TakeDamageWithKnockback(amount, Vector2.zero, 0f);
+    }
+
+    /// <summary>
+    /// Take damage with knockback from a specific direction.
+    /// </summary>
+    public void TakeDamageWithKnockback(int amount, Vector2 knockbackDirection, float knockbackForceAmount)
+    {
+        if (isInvincible || currentHealth <= 0)
+            return;
+
+        currentHealth -= amount;
+        isInvincible = true;
+        invincibilityTimer = invincibilityDuration;
+
+        // Apply knockback if provided, otherwise use default
+        if (knockbackForceAmount > 0f)
+        {
+            ApplyKnockback(knockbackDirection, knockbackForceAmount);
+        }
+        else
+        {
+            // Default knockback away from facing direction
+            float faceDir = lastFacingDirection;
+            ApplyKnockback(new Vector2(-faceDir, 0.5f), knockbackForce);
+        }
+
+        if (currentHealth <= 0)
+        {
+            OnPlayerDeath();
+        }
+    }
+
+    /// <summary>
+    /// Apply knockback to the player from an external source.
+    /// </summary>
+    /// <param name="direction">Direction of knockback (will be normalized)</param>
+    /// <param name="force">Strength of the knockback</param>
+    public void ApplyKnockback(Vector2 direction, float force)
+    {
+        velocity = direction.normalized * force;
+        rb.linearVelocity = velocity; // Apply immediately to rigidbody
+        knockbackStunTimer = knockbackStunDuration; // Briefly disable movement
+    }
+
+    /// <summary>
+    /// Apply knockback away from a source position.
+    /// </summary>
+    /// <param name="sourcePosition">Position of the damage source</param>
+    /// <param name="force">Strength of the knockback</param>
+    public void ApplyKnockbackFromSource(Vector2 sourcePosition, float force)
+    {
+        Vector2 direction = ((Vector2)transform.position - sourcePosition).normalized;
+        // Add some upward force
+        direction.y = Mathf.Max(direction.y, 0.3f);
+        velocity = direction.normalized * force;
+    }
+
+    private void OnPlayerDeath()
+    {
+        // For now, just log. You can add respawn, game over screen, etc.
+        Debug.Log("Player died!");
+        // Optionally disable controls:
+        // canMove = false;
+    }
+
+    private void UpdateInvincibility()
+    {
+        isInvincible = invincibilityTimer > 0f;
+    }
+
     // Public methods for external systems
     public bool IsGrounded() => isGrounded;
     public bool IsWallSliding() => isWallSliding;
     public bool IsDashing() => isDashing;
+    public bool IsInvincible() => isInvincible;
+    public int GetCurrentHealth() => currentHealth;
+    public int GetMaxHealth() => maxHealth;
     public Vector2 GetVelocity() => velocity;
     public float GetHorizontalInput() => horizontalInput;
+    public bool ConsumeAttackJustPerformed()
+    {
+        if (!attackJustPerformed)
+            return false;
+
+        attackJustPerformed = false;
+        return true;
+    }
 }
