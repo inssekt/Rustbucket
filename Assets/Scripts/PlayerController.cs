@@ -35,6 +35,13 @@ public class PlayerController : MonoBehaviour, IDamageable
     [SerializeField] private int maxAirDashes = 1;
     [SerializeField] private bool dashThroughWalls = false;
     
+    [Header("Grapple")]
+    [SerializeField] private bool enableGrapple = true;
+    [SerializeField] private float grappleRange = 10f;
+    [SerializeField] private float grappleDuration = 0.4f;
+    [SerializeField] private float grappleArcHeight = 2f;
+    [SerializeField] private LayerMask grappleLayer;
+    
     [Header("Ground Detection")]
     [SerializeField] private LayerMask groundLayer;
     [SerializeField] private Vector2 groundCheckSize = new Vector2(0.9f, 0.1f);
@@ -65,17 +72,12 @@ public class PlayerController : MonoBehaviour, IDamageable
     [SerializeField] private bool attackPressed;
     [SerializeField] private float attackCooldownTimer;
     [SerializeField] private Vector2 attackDirection;
-
-
-
     private bool attackJustPerformed;
 
     // Health state
     private bool isInvincible;
     private float invincibilityTimer;
     private float knockbackStunTimer;
-
-
 
     // Components
     private Rigidbody2D rb;
@@ -90,6 +92,7 @@ public class PlayerController : MonoBehaviour, IDamageable
     private bool jumpPressed;
     private bool jumpHeld;
     private bool dashPressed;
+    private bool grapplePressed;
     
     // Ground state
     private bool isGrounded;
@@ -114,6 +117,12 @@ public class PlayerController : MonoBehaviour, IDamageable
     private float dashCooldownTimer;
     private int airDashesRemaining;
     private Vector2 dashDirection;
+    
+    // Grapple state
+    private bool isGrappling;
+    private float grappleTimer;
+    private Vector2 grappleStartPos;
+    private Vector2 grappleEndPos;
     
     // Movement
     private Vector2 velocity;
@@ -142,6 +151,7 @@ public class PlayerController : MonoBehaviour, IDamageable
         UpdateInvincibility();
 
         HandleMeleeRequest();
+        HandleGrappleRequest();
 
         // Handle state transitions
         if (isGrounded && !wasGrounded)
@@ -160,6 +170,10 @@ public class PlayerController : MonoBehaviour, IDamageable
         if (isDashing)
         {
             HandleDash();
+        }
+        else if (isGrappling)
+        {
+            HandleGrappleMovement();
         }
         else
         {
@@ -233,7 +247,95 @@ public class PlayerController : MonoBehaviour, IDamageable
 
     }
 
+    private void HandleGrappleRequest()
+    {
+        if (!enableGrapple)
+        {
+            grapplePressed = false;
+            return;
+        }
 
+        if (!grapplePressed)
+            return;
+
+        grapplePressed = false;
+
+        if (isGrappling || isDashing || knockbackStunTimer > 0f)
+            return;
+
+        GrapplePoint target = FindBestGrapplePoint();
+        if (target == null)
+            return;
+
+        StartGrapple(target);
+    }
+
+    private void StartGrapple(GrapplePoint point)
+    {
+        if (point == null)
+            return;
+
+        Transform landing = point.LandingPoint;
+        if (landing == null)
+            return;
+
+        grappleStartPos = rb.position;
+        grappleEndPos = landing.position;
+        grappleTimer = 0f;
+        isGrappling = true;
+        isDashing = false;
+        velocity = Vector2.zero;
+    }
+
+    private void HandleGrappleMovement()
+    {
+        grappleTimer += Time.fixedDeltaTime;
+        float t = Mathf.Clamp01(grappleTimer / grappleDuration);
+
+        Vector2 p0 = grappleStartPos;
+        Vector2 p2 = grappleEndPos;
+        Vector2 p1 = (p0 + p2) * 0.5f + Vector2.up * grappleArcHeight;
+
+        float oneMinusT = 1f - t;
+        Vector2 newPos = oneMinusT * oneMinusT * p0 +
+                         2f * oneMinusT * t * p1 +
+                         t * t * p2;
+
+        rb.MovePosition(newPos);
+
+        if (t >= 1f)
+        {
+            isGrappling = false;
+        }
+    }
+
+    private GrapplePoint FindBestGrapplePoint()
+    {
+        Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, grappleRange, grappleLayer);
+
+        GrapplePoint best = null;
+        float bestDist = Mathf.Infinity;
+
+        for (int i = 0; i < hits.Length; i++)
+        {
+            GrapplePoint gp = hits[i].GetComponent<GrapplePoint>();
+            if (gp == null)
+                continue;
+
+            Transform landing = gp.LandingPoint;
+            if (landing == null)
+                continue;
+
+            float dist = Vector2.Distance(transform.position, gp.transform.position);
+            if (dist < bestDist)
+            {
+                bestDist = dist;
+                best = gp;
+            }
+        }
+
+        return best;
+    }
 
     public void OnMove(InputValue value)
     {
@@ -267,6 +369,11 @@ public class PlayerController : MonoBehaviour, IDamageable
             attackPressed = true;
     }
 
+    public void OnGrapple(InputValue value)
+    {
+        if (value.isPressed)
+            grapplePressed = true;
+    }
 
     private void HandleMovement()
     {
@@ -583,6 +690,12 @@ public class PlayerController : MonoBehaviour, IDamageable
             Gizmos.DrawWireSphere(origin, attackRadius);
         }
 
+        // Draw grapple range
+        if (enableGrapple)
+        {
+            Gizmos.color = Color.cyan;
+            Gizmos.DrawWireSphere(transform.position, grappleRange);
+        }
 
     }
 
@@ -676,5 +789,20 @@ public class PlayerController : MonoBehaviour, IDamageable
 
         attackJustPerformed = false;
         return true;
+    }
+
+    public void UnlockDash()
+    {
+        enableDash = true;
+    }
+
+    public void UnlockGrapple()
+    {
+        enableGrapple = true;
+    }
+
+    public void UnlockMeleeAttack()
+    {
+        enableMeleeAttack = true;
     }
 }
