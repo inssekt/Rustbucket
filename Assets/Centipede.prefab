@@ -191,8 +191,8 @@ MonoBehaviour:
     m_Bits: 64
   moveSpeed: 3
   acceleration: 20
-  groundCheckOffset: {x: 0, y: -1.28}
-  groundCheckSize: {x: 0.8, y: 0.1}
+  groundCheckOffset: {x: 0, y: -1.37}
+  groundCheckSize: {x: 3.7, y: 0.16}
   avoidEdges: 0
   edgeCheckOffset: {x: -1.57, y: -0.6}
   edgeCheckDistance: 0.7

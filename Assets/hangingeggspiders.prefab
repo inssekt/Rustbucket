@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &1371238742378520800
+--- !u!1 &3701629595188041326
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,42 +8,40 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 6153895897061627452}
-  - component: {fileID: 2219460078669600439}
-  - component: {fileID: 4860772126243628634}
-  - component: {fileID: 4052466452651646938}
-  - component: {fileID: 7646575012320907674}
-  - component: {fileID: 1093619922263088246}
-  - component: {fileID: 8320131504843951280}
+  - component: {fileID: 5090594313935942300}
+  - component: {fileID: 8428841816143452398}
+  - component: {fileID: 2494022889398618311}
+  - component: {fileID: 2169671508428252344}
+  - component: {fileID: 1520063945573933582}
   m_Layer: 8
-  m_Name: Cockroach
+  m_Name: hangingeggspiders
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &6153895897061627452
+--- !u!4 &5090594313935942300
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1371238742378520800}
+  m_GameObject: {fileID: 3701629595188041326}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 9.212127, y: 1.39, z: 0}
+  m_LocalPosition: {x: 470.6466, y: -69.73533, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!212 &2219460078669600439
+--- !u!212 &8428841816143452398
 SpriteRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1371238742378520800}
+  m_GameObject: {fileID: 3701629595188041326}
   m_Enabled: 1
   m_CastShadows: 0
   m_ReceiveShadows: 0
@@ -84,24 +82,24 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 21300000, guid: 91c3e7133f54b214d8c4e6bf8e728c30, type: 3}
+  m_Sprite: {fileID: 21300000, guid: bc81b2937fa8b924eb613a11f1be666c, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 2.25, y: 2.25}
+  m_Size: {x: 6.25, y: 4.6875}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!70 &4860772126243628634
+--- !u!70 &2494022889398618311
 CapsuleCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1371238742378520800}
+  m_GameObject: {fileID: 3701629595188041326}
   m_Enabled: 1
   serializedVersion: 3
   m_Density: 1
@@ -129,17 +127,17 @@ CapsuleCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: -0.049299445, y: -0.6648522}
-  m_Size: {x: 1.4968988, y: 0.87539256}
-  m_Direction: 1
---- !u!50 &4052466452651646938
+  m_Offset: {x: 0.14367676, y: -0.18856812}
+  m_Size: {x: 2.1194458, y: 3.179016}
+  m_Direction: 0
+--- !u!50 &2169671508428252344
 Rigidbody2D:
   serializedVersion: 5
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1371238742378520800}
+  m_GameObject: {fileID: 3701629595188041326}
   m_BodyType: 0
   m_Simulated: 1
   m_UseFullKinematicContacts: 0
@@ -158,92 +156,30 @@ Rigidbody2D:
   m_Interpolate: 0
   m_SleepingMode: 1
   m_CollisionDetection: 0
-  m_Constraints: 4
---- !u!114 &7646575012320907674
+  m_Constraints: 0
+--- !u!114 &1520063945573933582
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1371238742378520800}
+  m_GameObject: {fileID: 3701629595188041326}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5180fc3f3a4ecf9459fe42ba4f19e2d1, type: 3}
+  m_Script: {fileID: 11500000, guid: c536a24f6518bf54e9ab8d4c29ae4f1e, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::EnemyChaserAI
-  maxHealth: 3
-  currentHealth: 0
-  hitFlashDuration: 0.1
-  hitFlashColor: {r: 0.9433962, g: 0.7253471, b: 0.7253471, a: 1}
-  deathDelay: 0.5
-  destroyOnDeath: 1
-  OnDamaged:
-    m_PersistentCalls:
-      m_Calls: []
-  OnDeath:
-    m_PersistentCalls:
-      m_Calls: []
-  spriteDefaultFacesLeft: 1
-  detectionRange: 7.24
-  attackRange: 1.42
+  m_EditorClassIdentifier: Assembly-CSharp::SpiderEgg
+  spiderMinionPrefab: {fileID: 1949574893491771700, guid: cccbee1c3b608fc438af544437a5bdb2, type: 3}
+  spawnDelay: 0.2
+  fallSpeed: 8
   groundLayer:
     serializedVersion: 2
     m_Bits: 64
-  moveSpeed: 3
-  acceleration: 20
-  groundCheckOffset: {x: 0, y: -1.06}
-  groundCheckSize: {x: 1.44, y: 0.1}
-  avoidEdges: 0
-  edgeCheckOffset: {x: -1.57, y: -0.6}
-  edgeCheckDistance: 0.7
-  attackDamage: 1
-  attackCooldown: 1
-  attackDelay: 0.2
-  knockbackAmount: 8
-  attackSize: {x: 1, y: 0.5}
-  attackOffset: {x: 0, y: -0.54}
+  damagePlayerOnImpact: 1
+  impactDamage: 1
+  impactRadius: 0.5
   playerLayer:
     serializedVersion: 2
     m_Bits: 128
-  patrolWhenIdle: 1
-  patrolDistance: 3
-  patrolPauseTime: 1
---- !u!95 &1093619922263088246
-Animator:
-  serializedVersion: 7
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1371238742378520800}
-  m_Enabled: 1
-  m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 55df6376f4d4e8a47aa810d2935a0987, type: 2}
-  m_CullingMode: 0
-  m_UpdateMode: 0
-  m_ApplyRootMotion: 0
-  m_LinearVelocityBlending: 0
-  m_StabilizeFeet: 0
-  m_AnimatePhysics: 0
-  m_WarningMessage: 
-  m_HasTransformHierarchy: 1
-  m_AllowConstantClipSamplingOptimization: 1
-  m_KeepAnimatorStateOnDisable: 0
-  m_WriteDefaultValuesOnDisable: 0
---- !u!114 &8320131504843951280
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1371238742378520800}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7fcfd31a07a9ec84b85a625fc2ef53f8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::EnemyVisuals
-  spriteRenderer: {fileID: 0}
-  animator: {fileID: 0}
-  horizontalSpeedParam: HorizontalSpeed
-  attackTriggerParam: Attack
-  useAttackTrigger: 0
+  rotationSpeed: 180
+  maxLifetime: 10
