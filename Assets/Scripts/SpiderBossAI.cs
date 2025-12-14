@@ -13,6 +13,9 @@ public class SpiderBossAI : EnemyBase
     [SerializeField] private LayerMask groundLayer;
     [SerializeField] private LayerMask playerLayer;
 
+    [Header("Debug")]
+    [SerializeField] private bool enableDebugLogs = false;
+
     [Header("Movement")]
     [SerializeField] private float moveSpeed = 4f;
     [SerializeField] private float acceleration = 15f;
@@ -75,6 +78,14 @@ public class SpiderBossAI : EnemyBase
     private bool hasDealtLungeDamage;
     private float lungeDamageDelayTimer;
 
+    private void Log(string message)
+    {
+        if (!enableDebugLogs)
+            return;
+
+        Debug.Log($"[SpiderBossAI] {message}", this);
+    }
+
     protected override void Awake()
     {
         base.Awake();
@@ -83,6 +94,16 @@ public class SpiderBossAI : EnemyBase
 
         rb.freezeRotation = true;
         rb.gravityScale = 3f;
+
+        if (spiderEggPrefab == null)
+        {
+            Log("spiderEggPrefab is not set; EggDrop pattern will never be selected.");
+        }
+
+        if (visuals == null)
+        {
+            Log("EnemyVisuals component missing; boss animations may not trigger.");
+        }
     }
 
     protected override void Update()
@@ -95,6 +116,10 @@ public class SpiderBossAI : EnemyBase
         if (player == null)
         {
             player = FindPlayer();
+            if (player != null)
+            {
+                Log($"Player reacquired: '{player.name}'.");
+            }
         }
 
         CheckGrounded();
@@ -292,6 +317,9 @@ public class SpiderBossAI : EnemyBase
 
     private void TransitionToState(BossState newState)
     {
+        if (currentState == newState)
+            return;
+
         // Exit current state
         switch (currentState)
         {
@@ -303,6 +331,8 @@ public class SpiderBossAI : EnemyBase
                 patternTimer = 0f;
                 break;
         }
+
+        Log($"State: {currentState} -> {newState}");
 
         currentState = newState;
 
@@ -320,26 +350,36 @@ public class SpiderBossAI : EnemyBase
                 {
                     visuals.TriggerAttackAnimation();
                 }
+
+                Log($"PrepareLunge: timer={stateTimer}, facing={facingDirection}, distToPlayer={(player != null ? Vector2.Distance(transform.position, player.position) : -1f)}");
                 break;
 
             case BossState.Lunging:
                 stateTimer = lungeDuration;
                 lungeDamageDelayTimer = lungeDamageDelay;
+
+                Log($"Lunging: dir={lungeDirection}, speed={lungeSpeed}, duration={lungeDuration}, damageDelay={lungeDamageDelay}");
                 break;
 
             case BossState.Stuck:
                 stateTimer = stuckDuration;
                 rb.linearVelocity = Vector2.zero;
+
+                Log($"Stuck: duration={stuckDuration}");
                 break;
 
             case BossState.EggDrop:
                 eggsSpawned = 0;
                 eggSpawnTimer = 0f;
                 rb.linearVelocity = Vector2.zero;
+
+                Log($"EggDrop: eggsPerWave={eggsPerWave}, spawnInterval={eggSpawnInterval}, height={eggSpawnHeight}, arenaWidth={arenaWidth}");
                 break;
 
             case BossState.Recovering:
                 stateTimer = 1f;
+
+                Log($"Recovering: duration={stateTimer}");
                 break;
         }
     }
@@ -368,6 +408,11 @@ public class SpiderBossAI : EnemyBase
         Vector2 hitboxPos = (Vector2)transform.position + new Vector2(lungeHitboxOffset.x * facingDirection, lungeHitboxOffset.y);
         Collider2D[] hits = Physics2D.OverlapBoxAll(hitboxPos, lungeHitboxSize, 0f, playerLayer);
 
+        if (hits.Length == 0)
+        {
+            Log($"Lunge hit check: no hits. hitboxPos={hitboxPos}, size={lungeHitboxSize}");
+        }
+
         foreach (var hit in hits)
         {
             Vector2 knockbackDir = (hit.transform.position - transform.position).normalized;
@@ -379,6 +424,7 @@ public class SpiderBossAI : EnemyBase
             {
                 playerController.TakeDamageWithKnockback(lungeDamage, knockbackDir, lungeKnockback);
                 hasDealtLungeDamage = true;
+                Log($"Lunge hit PlayerController '{hit.name}': dmg={lungeDamage}, knockDir={knockbackDir}, knockForce={lungeKnockback}");
             }
             else
             {
@@ -387,6 +433,7 @@ public class SpiderBossAI : EnemyBase
                 {
                     damageable.TakeDamage(lungeDamage);
                     hasDealtLungeDamage = true;
+                    Log($"Lunge hit IDamageable '{hit.name}': dmg={lungeDamage}");
                 }
             }
         }
@@ -402,6 +449,8 @@ public class SpiderBossAI : EnemyBase
         Vector3 spawnPos = new Vector3(randomX, transform.position.y + eggSpawnHeight, 0f);
 
         Instantiate(spiderEggPrefab, spawnPos, Quaternion.identity);
+
+        Log($"Spawned egg {eggsSpawned + 1}/{eggsPerWave} at {spawnPos}");
     }
 
     private bool ShouldUseEggDrop()

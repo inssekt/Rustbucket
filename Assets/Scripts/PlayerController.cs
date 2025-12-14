@@ -11,6 +11,9 @@ public class PlayerController : MonoBehaviour, IDamageable
     [SerializeField] private float deceleration = 50f;
     [SerializeField] private float airAcceleration = 30f;
     [SerializeField] private float airDeceleration = 30f;
+
+    [Header("Debug")]
+    [SerializeField] private bool enableDebugLogs = false;
     
     [Header("Jump")]
     [SerializeField] private float jumpForce = 15f;
@@ -128,6 +131,14 @@ public class PlayerController : MonoBehaviour, IDamageable
     private Vector2 velocity;
     private bool canMove = true;
     private float lastFacingDirection = 1f;
+
+    private void Log(string message)
+    {
+        if (!enableDebugLogs)
+            return;
+
+        Debug.Log($"[PlayerController] {message}", this);
+    }
     
     private void Awake()
     {
@@ -140,6 +151,11 @@ public class PlayerController : MonoBehaviour, IDamageable
         rb.freezeRotation = true;
 
         currentHealth = maxHealth;
+
+        if (playerInput == null)
+        {
+            Log("PlayerInput missing. Input callbacks may not fire.");
+        }
     }
     
     private void Update()
@@ -230,6 +246,8 @@ public class PlayerController : MonoBehaviour, IDamageable
         // target detection
         Collider2D[] hits = Physics2D.OverlapCircleAll(origin, attackRadius, attackHitLayer);
 
+        int damageableHits = 0;
+
         foreach (var hit in hits)
         {
             // Optional: requires a damageable interface or component
@@ -237,8 +255,11 @@ public class PlayerController : MonoBehaviour, IDamageable
             if (damageable != null)
             {
                 damageable.TakeDamage(attackDamage);
+                damageableHits++;
             }
         }
+
+        Log($"Melee attack: origin={origin}, dir={attackDirection}, radius={attackRadius}, overlaps={hits.Length}, damaged={damageableHits}, dmg={attackDamage}");
 
         // cooldown
         attackCooldownTimer = attackCooldown;
@@ -285,6 +306,8 @@ public class PlayerController : MonoBehaviour, IDamageable
         isGrappling = true;
         isDashing = false;
         velocity = Vector2.zero;
+
+        Log($"Grapple started: start={grappleStartPos}, end={grappleEndPos}, duration={grappleDuration}");
     }
 
     private void HandleGrappleMovement()
@@ -306,6 +329,7 @@ public class PlayerController : MonoBehaviour, IDamageable
         if (t >= 1f)
         {
             isGrappling = false;
+            Log($"Grapple finished: end={grappleEndPos}");
         }
     }
 
@@ -510,6 +534,7 @@ public class PlayerController : MonoBehaviour, IDamageable
             // End dash
             isDashing = false;
             velocity *= 0.5f; // Slight slowdown after dash
+            Log($"Dash ended: vel={velocity}, cooldownRemaining={dashCooldownTimer}");
         }
         else
         {
@@ -541,6 +566,8 @@ public class PlayerController : MonoBehaviour, IDamageable
         isDashing = true;
         dashTimeLeft = dashDuration;
         dashCooldownTimer = dashCooldown;
+
+        Log($"Dash started: dir={dashDirection}, speed={dashSpeed}, duration={dashDuration}, grounded={isGrounded}, airDashesRemaining(beforeConsume)={airDashesRemaining}");
         
         if (!isGrounded)
         {
@@ -651,6 +678,8 @@ public class PlayerController : MonoBehaviour, IDamageable
     {
         // Reset air dashes
         airDashesRemaining = maxAirDashes;
+
+        Log($"Landed: pos={transform.position}, vel={velocity}, airDashesReset={airDashesRemaining}");
         
         // Re-enable collision if dashing through walls
         if (dashThroughWalls)
@@ -713,9 +742,12 @@ public class PlayerController : MonoBehaviour, IDamageable
         if (isInvincible || currentHealth <= 0)
             return;
 
+        int previousHealth = currentHealth;
         currentHealth -= amount;
         isInvincible = true;
         invincibilityTimer = invincibilityDuration;
+
+        Log($"Took damage: amount={amount}, health {previousHealth}->{currentHealth}, invincibility={invincibilityDuration}, knockDir={knockbackDirection}, knockForce={knockbackForceAmount}");
 
         // Apply knockback if provided, otherwise use default
         if (knockbackForceAmount > 0f)
@@ -764,6 +796,7 @@ public class PlayerController : MonoBehaviour, IDamageable
     {
         // For now, just log. You can add respawn, game over screen, etc.
         Debug.Log("Player died!");
+        Log("Player death triggered.");
         // Optionally disable controls:
         // canMove = false;
     }

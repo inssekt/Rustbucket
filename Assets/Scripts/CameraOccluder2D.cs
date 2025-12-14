@@ -11,6 +11,9 @@ public class CameraOccluder2D : MonoBehaviour
     [Header("Target")]
     [SerializeField] private Transform target; // Player
 
+    [Header("Debug")]
+    [SerializeField] private bool enableDebugLogs = false;
+
     [Header("Occlusion Settings")]
     [SerializeField] private LayerMask foregroundLayer; // e.g. Foreground
     [SerializeField] private float fadedAlpha = 0.2f;
@@ -18,8 +21,19 @@ public class CameraOccluder2D : MonoBehaviour
 
     private Camera cam;
 
+    private int lastHitCount = -1;
+    private int lastFadedCount = -1;
+
     // Track which renderers are currently faded
     private readonly HashSet<SpriteRenderer> fadedRenderers = new HashSet<SpriteRenderer>();
+
+    private void Log(string message)
+    {
+        if (!enableDebugLogs)
+            return;
+
+        Debug.Log($"[CameraOccluder2D] {message}", this);
+    }
 
     private void Awake()
     {
@@ -27,6 +41,16 @@ public class CameraOccluder2D : MonoBehaviour
         if (cam == null)
         {
             cam = Camera.main;
+        }
+
+        if (cam == null)
+        {
+            Log("No Camera found (neither on this object nor Camera.main).");
+        }
+
+        if (target == null)
+        {
+            Log("Target not set; occlusion checks will not run.");
         }
     }
 
@@ -43,6 +67,12 @@ public class CameraOccluder2D : MonoBehaviour
 
         // Find all foreground colliders between camera and target
         RaycastHit2D[] hits = Physics2D.RaycastAll(origin, direction, distance, foregroundLayer);
+
+        if (lastHitCount != hits.Length)
+        {
+            lastHitCount = hits.Length;
+            Log($"Occlusion ray hits={hits.Length}, distance={distance}");
+        }
 
         // Build a set of currently hit renderers
         HashSet<SpriteRenderer> hitRenderers = new HashSet<SpriteRenderer>();
@@ -99,6 +129,12 @@ public class CameraOccluder2D : MonoBehaviour
         foreach (var sr in toRemove)
         {
             fadedRenderers.Remove(sr);
+        }
+
+        if (lastFadedCount != fadedRenderers.Count)
+        {
+            lastFadedCount = fadedRenderers.Count;
+            Log($"Currently faded renderers={fadedRenderers.Count}");
         }
     }
 
